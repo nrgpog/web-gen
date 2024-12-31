@@ -6,6 +6,11 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { io, Socket } from 'socket.io-client';
 
+// URL base según el entorno
+const BASE_URL = process.env.NODE_ENV === 'production'
+  ? 'https://custom-gen.vercel.app'
+  : 'http://localhost:3000';
+
 export default function IRCPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -28,22 +33,50 @@ export default function IRCPage() {
     
     setIsConnecting(true);
     try {
-      const socket = io('http://localhost:3001', {
+      const socket = io(BASE_URL, {
+        path: '/api/socketio',
+        addTrailingSlash: false,
         reconnection: true,
+        reconnectionAttempts: 5,
         reconnectionDelay: 2000,
+        withCredentials: true,
+        transports: ['polling', 'websocket'],
+        timeout: 10000,
+        forceNew: true
       });
-      socketRef.current = socket;
+
+      socket.on('connect_error', (error) => {
+        console.error('Error de conexión:', error);
+        setIsConnecting(false);
+        setConnected(false);
+      });
+
+      socket.on('error', (error) => {
+        console.error('Error de socket:', error);
+        setIsConnecting(false);
+        setConnected(false);
+      });
 
       socket.on('connect', () => {
         console.log('Conectado al servidor Socket.IO');
+        setConnected(true);
         setIsConnecting(false);
       });
 
       socket.on('message', (encryptedData) => {
         try {
+          console.log('Mensaje recibido (encriptado):', encryptedData);
           const decryptedMessage = AES.decrypt(encryptedData, process.env.NEXT_PUBLIC_IRC_INVITE_CODE || '').toString(enc.Utf8);
-          if (decryptedMessage) {
-            setMessages(prev => [...prev, decryptedMessage]);
+          console.log('Mensaje desencriptado:', decryptedMessage);
+          
+          if (decryptedMessage && session?.user?.name) {
+            // Evitar duplicar mensajes propios
+            const [author] = decryptedMessage.split(':');
+            const isOwnMessage = author.trim() === session.user.name;
+            
+            if (!isOwnMessage) {
+              setMessages(prev => [...prev, decryptedMessage]);
+            }
           }
         } catch (error) {
           console.error('Error al desencriptar mensaje:', error);
@@ -51,8 +84,12 @@ export default function IRCPage() {
       });
 
       socket.on('disconnect', () => {
+        setConnected(false);
         setIsConnecting(false);
+        console.log('Desconectado del servidor');
       });
+
+      socketRef.current = socket;
 
     } catch (error) {
       setIsConnecting(false);
@@ -94,14 +131,28 @@ export default function IRCPage() {
           const connectionMessage = `* ${session.user.name} se ha unido al chat`;
           const encryptedMessage = AES.encrypt(connectionMessage, process.env.NEXT_PUBLIC_IRC_INVITE_CODE || '').toString();
           socketRef.current.emit('message', encryptedMessage);
+          console.log('Mensaje de conexión enviado');
         }
       } else {
         setMessages(prev => [...prev, '* Código de invitación inválido']);
       }
     } else if (connected && socketRef.current?.connected) {
-      const fullMessage = `${session.user.name}: ${input}`;
-      const encryptedMessage = AES.encrypt(fullMessage, process.env.NEXT_PUBLIC_IRC_INVITE_CODE || '').toString();
-      socketRef.current.emit('message', encryptedMessage);
+      try {
+        const fullMessage = `${session.user.name}: ${input}`;
+        console.log('Enviando mensaje:', fullMessage);
+        
+        const encryptedMessage = AES.encrypt(fullMessage, process.env.NEXT_PUBLIC_IRC_INVITE_CODE || '').toString();
+        socketRef.current.emit('message', encryptedMessage);
+        
+        // Agregar el mensaje localmente también
+        setMessages(prev => [...prev, fullMessage]);
+      } catch (error) {
+        console.error('Error al enviar mensaje:', error);
+        setMessages(prev => [...prev, '* Error al enviar el mensaje']);
+      }
+    } else {
+      console.log('No conectado:', { connected, socketConnected: socketRef.current?.connected });
+      setMessages(prev => [...prev, '* No estás conectado al chat']);
     }
 
     setInput('');

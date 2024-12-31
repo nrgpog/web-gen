@@ -3,11 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"next dev\" \"npm run irc-server\"",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "irc-server": "node ./server/irc-server.js"
+    "lint": "next lint"
   },
   "dependencies": {
     "@auth/core": "^0.34.2",
