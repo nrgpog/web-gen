@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { AES, enc } from 'crypto-js';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { io, Socket } from 'socket.io-client';
 
 export default function IRCPage() {
   const { data: session, status } = useSession();
@@ -12,9 +13,8 @@ export default function IRCPage() {
   const [input, setInput] = useState('');
   const [connected, setConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const wsRef = useRef<WebSocket | null>(null);
+  const socketRef = useRef<Socket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Redirigir si no hay sesión
   useEffect(() => {
@@ -23,60 +23,51 @@ export default function IRCPage() {
     }
   }, [status, router]);
 
-  const connectWebSocket = () => {
+  const connectSocket = () => {
     if (isConnecting || !session?.user?.name) return;
     
     setIsConnecting(true);
     try {
-      const ws = new WebSocket('ws://localhost:3001');
-      wsRef.current = ws;
+      const socket = io('http://localhost:3001', {
+        reconnection: true,
+        reconnectionDelay: 2000,
+      });
+      socketRef.current = socket;
 
-      ws.onopen = () => {
-        console.log('Conectado al servidor WebSocket');
+      socket.on('connect', () => {
+        console.log('Conectado al servidor Socket.IO');
         setIsConnecting(false);
-        if (reconnectTimeoutRef.current) {
-          clearTimeout(reconnectTimeoutRef.current);
-        }
-      };
+      });
 
-      ws.onmessage = (event) => {
+      socket.on('message', (encryptedData) => {
         try {
-          const decryptedMessage = AES.decrypt(event.data, process.env.NEXT_PUBLIC_IRC_INVITE_CODE || '').toString(enc.Utf8);
+          const decryptedMessage = AES.decrypt(encryptedData, process.env.NEXT_PUBLIC_IRC_INVITE_CODE || '').toString(enc.Utf8);
           if (decryptedMessage) {
             setMessages(prev => [...prev, decryptedMessage]);
           }
         } catch (error) {
           console.error('Error al desencriptar mensaje:', error);
         }
-      };
+      });
 
-      ws.onerror = () => {
+      socket.on('disconnect', () => {
         setIsConnecting(false);
-      };
+      });
 
-      ws.onclose = () => {
-        setIsConnecting(false);
-        reconnectTimeoutRef.current = setTimeout(() => {
-          connectWebSocket();
-        }, 2000);
-      };
     } catch (error) {
       setIsConnecting(false);
-      console.error('Error al crear WebSocket:', error);
+      console.error('Error al crear Socket.IO:', error);
     }
   };
 
   useEffect(() => {
     if (session?.user?.name) {
-      connectWebSocket();
+      connectSocket();
     }
 
     return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-      }
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
+      if (socketRef.current) {
+        socketRef.current.disconnect();
       }
     };
   }, [session]);
@@ -99,18 +90,18 @@ export default function IRCPage() {
         setConnected(true);
         setMessages(prev => [...prev, '* Conectado al canal privado']);
         
-        if (wsRef.current?.readyState === WebSocket.OPEN) {
+        if (socketRef.current?.connected) {
           const connectionMessage = `* ${session.user.name} se ha unido al chat`;
           const encryptedMessage = AES.encrypt(connectionMessage, process.env.NEXT_PUBLIC_IRC_INVITE_CODE || '').toString();
-          wsRef.current.send(encryptedMessage);
+          socketRef.current.emit('message', encryptedMessage);
         }
       } else {
         setMessages(prev => [...prev, '* Código de invitación inválido']);
       }
-    } else if (connected && wsRef.current?.readyState === WebSocket.OPEN) {
+    } else if (connected && socketRef.current?.connected) {
       const fullMessage = `${session.user.name}: ${input}`;
       const encryptedMessage = AES.encrypt(fullMessage, process.env.NEXT_PUBLIC_IRC_INVITE_CODE || '').toString();
-      wsRef.current.send(encryptedMessage);
+      socketRef.current.emit('message', encryptedMessage);
     }
 
     setInput('');

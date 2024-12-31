@@ -1,30 +1,26 @@
-const WebSocket = require('ws');
-
-const wss = new WebSocket.Server({ port: 3001 });
-const clients = new Set();
+const { Server } = require('socket.io');
+const io = new Server(3001, {
+  cors: {
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"]
+  }
+});
 
 console.log('Servidor IRC iniciado en el puerto 3001');
 
-wss.on('connection', (ws) => {
-  clients.add(ws);
-  console.log('Cliente conectado. Total de clientes:', clients.size);
+io.on('connection', (socket) => {
+  console.log('Cliente conectado. Total de clientes:', io.engine.clientsCount);
 
-  ws.on('message', (message) => {
+  socket.on('message', (message) => {
     // Broadcast el mensaje a todos los clientes conectados
-    clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(message.toString());
-      }
-    });
+    io.emit('message', message);
   });
 
-  ws.on('close', () => {
-    clients.delete(ws);
-    console.log('Cliente desconectado. Total de clientes:', clients.size);
+  socket.on('disconnect', () => {
+    console.log('Cliente desconectado. Total de clientes:', io.engine.clientsCount);
   });
 
-  ws.on('error', (error) => {
-    console.error('Error de WebSocket:', error);
-    clients.delete(ws);
+  socket.on('error', (error) => {
+    console.error('Error de Socket.IO:', error);
   });
-}); 
+});
