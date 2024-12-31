@@ -40,27 +40,31 @@ export default function IRCPage() {
         reconnectionAttempts: 5,
         reconnectionDelay: 2000,
         withCredentials: true,
-        transports: ['polling', 'websocket'],
+        transports: ['websocket'],
         timeout: 10000,
-        forceNew: true
+        forceNew: true,
+        autoConnect: false
       });
 
       socket.on('connect_error', (error) => {
         console.error('Error de conexión:', error);
         setIsConnecting(false);
         setConnected(false);
+        setMessages(prev => [...prev, '* Error de conexión: ' + error.message]);
       });
 
       socket.on('error', (error) => {
         console.error('Error de socket:', error);
         setIsConnecting(false);
         setConnected(false);
+        setMessages(prev => [...prev, '* Error de socket: ' + error.message]);
       });
 
       socket.on('connect', () => {
         console.log('Conectado al servidor Socket.IO');
         setConnected(true);
         setIsConnecting(false);
+        setMessages(prev => [...prev, '* Conectado al servidor']);
       });
 
       socket.on('message', (encryptedData) => {
