@@ -91,12 +91,6 @@ export default function Home() {
       <div className="w-64 bg-gray-800 text-white p-4">
         <h2 className="text-xl font-bold mb-4">Herramientas</h2>
         <button
-          onClick={() => router.push('/irc')}
-          className="w-full text-left px-4 py-2 rounded hover:bg-gray-700 transition-colors"
-        >
-          IRC
-        </button>
-        <button
           onClick={() => router.push('/decoraciones')}
           className="w-full text-left px-4 py-2 rounded hover:bg-gray-700 transition-colors"
         >
