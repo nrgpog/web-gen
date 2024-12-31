@@ -4,12 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 import { AES, enc } from 'crypto-js';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { io, Socket } from 'socket.io-client';
-
-// URL base según el entorno
-const BASE_URL = process.env.NODE_ENV === 'production'
-  ? 'https://custom-gen.vercel.app'
-  : 'http://localhost:3000';
 
 export default function IRCPage() {
   const { data: session, status } = useSession();
@@ -18,8 +12,9 @@ export default function IRCPage() {
   const [input, setInput] = useState('');
   const [connected, setConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const socketRef = useRef<Socket | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Redirigir si no hay sesión
   useEffect(() => {
@@ -28,123 +23,60 @@ export default function IRCPage() {
     }
   }, [status, router]);
 
-  const connectSocket = () => {
+  const connectWebSocket = () => {
     if (isConnecting || !session?.user?.name) return;
     
     setIsConnecting(true);
     try {
-      const socket = io(BASE_URL, {
-        path: '/api/socketio',
-        addTrailingSlash: false,
-        reconnection: true,
-        reconnectionAttempts: 5,
-        reconnectionDelay: 1000,
-        reconnectionDelayMax: 5000,
-        withCredentials: true,
-        transports: ['polling', 'websocket'],
-        timeout: 20000,
-        forceNew: true,
-        autoConnect: false,
-        extraHeaders: {
-          'Content-Type': 'application/json'
+      const ws = new WebSocket('ws://localhost:3001');
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        console.log('Conectado al servidor WebSocket');
+        setIsConnecting(false);
+        if (reconnectTimeoutRef.current) {
+          clearTimeout(reconnectTimeoutRef.current);
         }
-      });
+      };
 
-      socket.on('connect_error', (error: Error) => {
-        console.error('Error de conexión:', error);
-        setIsConnecting(false);
-        setConnected(false);
-        setMessages(prev => [...prev, `* Error de conexión: ${error.message}. Reintentando...`]);
-        
-        // Intentar reconectar después de un tiempo
-        setTimeout(() => {
-          if (!socket.connected) {
-            // Intentar con polling primero
-            socket.io.opts.transports = ['polling', 'websocket'];
-            socket.connect();
-          }
-        }, 3000);
-      });
-
-      socket.on('error', (error: Error) => {
-        console.error('Error de socket:', error);
-        setIsConnecting(false);
-        setConnected(false);
-        setMessages(prev => [...prev, `* Error de socket: ${error.message}`]);
-      });
-
-      socket.on('connect', () => {
-        console.log('Conectado al servidor Socket.IO');
-        setConnected(true);
-        setIsConnecting(false);
-        setMessages(prev => [...prev, '* Conectado al servidor']);
-      });
-
-      socket.on('disconnect', (reason) => {
-        console.log('Desconectado del servidor:', reason);
-        setConnected(false);
-        setMessages(prev => [...prev, `* Desconectado del servidor: ${reason}`]);
-        
-        if (reason === 'io server disconnect' || reason === 'transport close' || reason === 'ping timeout') {
-          setTimeout(() => {
-            if (!socket.connected) {
-              // Intentar con polling primero
-              socket.io.opts.transports = ['polling', 'websocket'];
-              socket.connect();
-            }
-          }, 3000);
-        }
-      });
-
-      socket.on('reconnect', (attemptNumber) => {
-        console.log('Reconectado al servidor después de', attemptNumber, 'intentos');
-        setConnected(true);
-        setMessages(prev => [...prev, `* Reconectado al servidor después de ${attemptNumber} intentos`]);
-      });
-
-      socket.on('reconnect_attempt', (attemptNumber) => {
-        console.log('Intento de reconexión:', attemptNumber);
-        setMessages(prev => [...prev, `* Intento de reconexión ${attemptNumber}`]);
-      });
-
-      socketRef.current = socket;
-      socket.connect();
-
-      socket.on('message', (encryptedData) => {
+      ws.onmessage = (event) => {
         try {
-          console.log('Mensaje recibido (encriptado):', encryptedData);
-          const decryptedMessage = AES.decrypt(encryptedData, process.env.NEXT_PUBLIC_IRC_INVITE_CODE || '').toString(enc.Utf8);
-          console.log('Mensaje desencriptado:', decryptedMessage);
-          
-          if (decryptedMessage && session?.user?.name) {
-            // Evitar duplicar mensajes propios
-            const [author] = decryptedMessage.split(':');
-            const isOwnMessage = author.trim() === session.user.name;
-            
-            if (!isOwnMessage) {
-              setMessages(prev => [...prev, decryptedMessage]);
-            }
+          const decryptedMessage = AES.decrypt(event.data, process.env.NEXT_PUBLIC_IRC_INVITE_CODE || '').toString(enc.Utf8);
+          if (decryptedMessage) {
+            setMessages(prev => [...prev, decryptedMessage]);
           }
         } catch (error) {
           console.error('Error al desencriptar mensaje:', error);
         }
-      });
+      };
 
+      ws.onerror = () => {
+        setIsConnecting(false);
+      };
+
+      ws.onclose = () => {
+        setIsConnecting(false);
+        reconnectTimeoutRef.current = setTimeout(() => {
+          connectWebSocket();
+        }, 2000);
+      };
     } catch (error) {
-      console.error('Error al inicializar el socket:', error);
       setIsConnecting(false);
-      setMessages(prev => [...prev, `* Error crítico al inicializar la conexión: ${error instanceof Error ? error.message : 'Error desconocido'}`]);
+      console.error('Error al crear WebSocket:', error);
     }
   };
 
   useEffect(() => {
     if (session?.user?.name) {
-      connectSocket();
+      connectWebSocket();
     }
 
     return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
       }
     };
   }, [session]);
@@ -164,38 +96,21 @@ export default function IRCPage() {
     if (input.startsWith('/join')) {
       const inviteCode = input.split(' ')[1]?.replace('#', '');
       if (inviteCode === process.env.NEXT_PUBLIC_IRC_INVITE_CODE) {
-        if (!socketRef.current?.connected) {
-          socketRef.current?.connect();
-        }
         setConnected(true);
         setMessages(prev => [...prev, '* Conectado al canal privado']);
         
-        if (socketRef.current?.connected) {
+        if (wsRef.current?.readyState === WebSocket.OPEN) {
           const connectionMessage = `* ${session.user.name} se ha unido al chat`;
           const encryptedMessage = AES.encrypt(connectionMessage, process.env.NEXT_PUBLIC_IRC_INVITE_CODE || '').toString();
-          socketRef.current.emit('message', encryptedMessage);
-          console.log('Mensaje de conexión enviado');
+          wsRef.current.send(encryptedMessage);
         }
       } else {
         setMessages(prev => [...prev, '* Código de invitación inválido']);
       }
-    } else if (socketRef.current?.connected) {
-      try {
-        const fullMessage = `${session.user.name}: ${input}`;
-        console.log('Enviando mensaje:', fullMessage);
-        
-        const encryptedMessage = AES.encrypt(fullMessage, process.env.NEXT_PUBLIC_IRC_INVITE_CODE || '').toString();
-        socketRef.current.emit('message', encryptedMessage);
-        
-        // Agregar el mensaje localmente también
-        setMessages(prev => [...prev, fullMessage]);
-      } catch (error) {
-        console.error('Error al enviar mensaje:', error);
-        setMessages(prev => [...prev, '* Error al enviar el mensaje']);
-      }
-    } else {
-      console.log('No conectado:', { connected, socketConnected: socketRef.current?.connected });
-      setMessages(prev => [...prev, '* No estás conectado al chat. Usa /join #invitación para conectarte']);
+    } else if (connected && wsRef.current?.readyState === WebSocket.OPEN) {
+      const fullMessage = `${session.user.name}: ${input}`;
+      const encryptedMessage = AES.encrypt(fullMessage, process.env.NEXT_PUBLIC_IRC_INVITE_CODE || '').toString();
+      wsRef.current.send(encryptedMessage);
     }
 
     setInput('');

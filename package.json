@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "irc-server": "node server/irc-server.js"
   },
   "dependencies": {
     "@auth/core": "^0.34.2",
@@ -16,14 +17,13 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "crypto-js": "^4.2.0",
-    "socket.io": "^4.7.5",
-    "socket.io-client": "^4.7.5"
+    "ws": "^8.16.0"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@types/socket.io-client": "^3.0.0",
+    "@types/ws": "^8.5.10",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "typescript": "^5",
