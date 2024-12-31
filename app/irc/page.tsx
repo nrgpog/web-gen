@@ -67,6 +67,9 @@ export default function IRCPage() {
         setMessages(prev => [...prev, '* Conectado al servidor']);
       });
 
+      socketRef.current = socket;
+      socket.connect();
+
       socket.on('message', (encryptedData) => {
         try {
           console.log('Mensaje recibido (encriptado):', encryptedData);
@@ -92,8 +95,6 @@ export default function IRCPage() {
         setIsConnecting(false);
         console.log('Desconectado del servidor');
       });
-
-      socketRef.current = socket;
 
     } catch (error) {
       setIsConnecting(false);
@@ -128,6 +129,9 @@ export default function IRCPage() {
     if (input.startsWith('/join')) {
       const inviteCode = input.split(' ')[1]?.replace('#', '');
       if (inviteCode === process.env.NEXT_PUBLIC_IRC_INVITE_CODE) {
+        if (!socketRef.current?.connected) {
+          socketRef.current?.connect();
+        }
         setConnected(true);
         setMessages(prev => [...prev, '* Conectado al canal privado']);
         
@@ -140,7 +144,7 @@ export default function IRCPage() {
       } else {
         setMessages(prev => [...prev, '* Código de invitación inválido']);
       }
-    } else if (connected && socketRef.current?.connected) {
+    } else if (socketRef.current?.connected) {
       try {
         const fullMessage = `${session.user.name}: ${input}`;
         console.log('Enviando mensaje:', fullMessage);
@@ -156,7 +160,7 @@ export default function IRCPage() {
       }
     } else {
       console.log('No conectado:', { connected, socketConnected: socketRef.current?.connected });
-      setMessages(prev => [...prev, '* No estás conectado al chat']);
+      setMessages(prev => [...prev, '* No estás conectado al chat. Usa /join #invitación para conectarte']);
     }
 
     setInput('');
