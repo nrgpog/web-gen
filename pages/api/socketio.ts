@@ -23,7 +23,7 @@ interface ResponseWithSocket extends NextApiResponse {
 }
 
 const SocketHandler = async (req: any, res: ResponseWithSocket) => {
-  if (req.method !== 'GET') {
+  if (req.method !== 'GET' && req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
     return;
   }
@@ -40,15 +40,16 @@ const SocketHandler = async (req: any, res: ResponseWithSocket) => {
           origin: process.env.NODE_ENV === 'production'
             ? ['https://custom-gen.vercel.app']
             : ['http://localhost:3000'],
-          methods: ['GET', 'POST'],
+          methods: ['GET', 'POST', 'OPTIONS'],
           credentials: true,
-          allowedHeaders: ['content-type']
+          allowedHeaders: ['content-type', 'authorization']
         },
         transports: ['polling', 'websocket'],
         pingTimeout: 60000,
         pingInterval: 25000,
         upgradeTimeout: 30000,
         allowUpgrades: true,
+        connectTimeout: 45000,
         cookie: {
           name: 'io',
           path: '/',
@@ -82,7 +83,11 @@ const SocketHandler = async (req: any, res: ResponseWithSocket) => {
       res.socket.server.io = io;
     }
 
-    res.end();
+    if (req.method === 'GET') {
+      res.end();
+    } else {
+      res.status(200).json({ status: 'ok' });
+    }
   } catch (error) {
     console.error('Error en el manejador de Socket.IO:', error);
     res.status(500).json({ 

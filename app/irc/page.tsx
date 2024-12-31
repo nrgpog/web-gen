@@ -37,24 +37,31 @@ export default function IRCPage() {
         path: '/api/socketio',
         addTrailingSlash: false,
         reconnection: true,
-        reconnectionAttempts: 10,
-        reconnectionDelay: 1000,
-        reconnectionDelayMax: 5000,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 2000,
+        reconnectionDelayMax: 10000,
         withCredentials: true,
         transports: ['polling', 'websocket'],
-        timeout: 20000,
+        timeout: 45000,
         forceNew: true,
         autoConnect: false
       });
 
-      socket.on('connect_error', (error) => {
+      socket.on('connect_error', (error: Error) => {
         console.error('Error de conexión:', error);
         setIsConnecting(false);
         setConnected(false);
-        setMessages(prev => [...prev, `* Error de conexión: ${error.message}`]);
+        setMessages(prev => [...prev, `* Error de conexión: ${error.message}. Reintentando...`]);
+        
+        // Intentar reconectar después de un tiempo
+        setTimeout(() => {
+          if (!socket.connected) {
+            socket.connect();
+          }
+        }, 5000);
       });
 
-      socket.on('error', (error) => {
+      socket.on('error', (error: Error) => {
         console.error('Error de socket:', error);
         setIsConnecting(false);
         setConnected(false);
@@ -73,9 +80,12 @@ export default function IRCPage() {
         setConnected(false);
         setMessages(prev => [...prev, `* Desconectado del servidor: ${reason}`]);
         
-        // Intentar reconectar si la desconexión no fue intencional
-        if (reason === 'io server disconnect' || reason === 'transport close') {
-          socket.connect();
+        if (reason === 'io server disconnect' || reason === 'transport close' || reason === 'ping timeout') {
+          setTimeout(() => {
+            if (!socket.connected) {
+              socket.connect();
+            }
+          }, 3000);
         }
       });
 
@@ -114,8 +124,9 @@ export default function IRCPage() {
       });
 
     } catch (error) {
+      console.error('Error al inicializar el socket:', error);
       setIsConnecting(false);
-      console.error('Error al crear Socket.IO:', error);
+      setMessages(prev => [...prev, `* Error crítico al inicializar la conexión: ${error instanceof Error ? error.message : 'Error desconocido'}`]);
     }
   };
 

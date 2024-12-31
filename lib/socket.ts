@@ -33,12 +33,17 @@ export const initSocket = (res: ResponseWithSocket) => {
         origin: process.env.NODE_ENV === 'production'
           ? [
               'https://custom-gen.vercel.app',
-              'wss://custom-gen.vercel.app'
+              'wss://custom-gen.vercel.app',
+              'https://custom-gen.vercel.app:*'
             ]
-          : ['http://localhost:3000'],
-        methods: ['GET', 'POST'],
+          : ['http://localhost:3000', 'http://localhost:*'],
+        methods: ['GET', 'POST', 'OPTIONS'],
         credentials: true,
-        allowedHeaders: ['content-type']
+        allowedHeaders: [
+          'content-type',
+          'authorization',
+          'x-requested-with'
+        ]
       },
       pingTimeout: 60000,
       pingInterval: 25000,
@@ -51,6 +56,7 @@ export const initSocket = (res: ResponseWithSocket) => {
 
       socket.on('error', (error) => {
         console.error('Socket error:', error);
+        socket.emit('reconnect_attempt');
       });
 
       socket.on('message', (message) => {
@@ -59,6 +65,9 @@ export const initSocket = (res: ResponseWithSocket) => {
 
       socket.on('disconnect', (reason) => {
         console.log('Cliente desconectado:', socket.id, 'reason:', reason);
+        if (reason === 'transport error' || reason === 'transport close') {
+          socket.emit('reconnect_attempt');
+        }
       });
     });
 
