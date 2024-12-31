@@ -28,25 +28,37 @@ export const initSocket = (res: ResponseWithSocket) => {
     const io = new SocketIOServer(httpServer, {
       path: '/api/socketio',
       addTrailingSlash: false,
+      transports: ['websocket', 'polling'],
       cors: {
         origin: process.env.NODE_ENV === 'production'
-          ? ['https://custom-gen.vercel.app']
+          ? [
+              'https://custom-gen.vercel.app',
+              'wss://custom-gen.vercel.app'
+            ]
           : ['http://localhost:3000'],
         methods: ['GET', 'POST'],
         credentials: true,
+        allowedHeaders: ['content-type']
       },
+      pingTimeout: 60000,
+      pingInterval: 25000,
+      connectTimeout: 10000,
+      allowEIO3: true
     });
 
-    // Manejar conexiones
     io.on('connection', (socket) => {
       console.log('Cliente conectado:', socket.id);
+
+      socket.on('error', (error) => {
+        console.error('Socket error:', error);
+      });
 
       socket.on('message', (message) => {
         io.emit('message', message);
       });
 
-      socket.on('disconnect', () => {
-        console.log('Cliente desconectado:', socket.id);
+      socket.on('disconnect', (reason) => {
+        console.log('Cliente desconectado:', socket.id, 'reason:', reason);
       });
     });
 

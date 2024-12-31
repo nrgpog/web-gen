@@ -42,10 +42,19 @@ const SocketHandler = async (req: any, res: ResponseWithSocket) => {
             : ['http://localhost:3000'],
           methods: ['GET', 'POST'],
           credentials: true,
+          allowedHeaders: ['content-type']
         },
         transports: ['polling', 'websocket'],
         pingTimeout: 60000,
         pingInterval: 25000,
+        upgradeTimeout: 30000,
+        allowUpgrades: true,
+        cookie: {
+          name: 'io',
+          path: '/',
+          httpOnly: true,
+          sameSite: 'strict'
+        }
       });
 
       io.on('connection', (socket) => {
@@ -53,9 +62,11 @@ const SocketHandler = async (req: any, res: ResponseWithSocket) => {
 
         socket.on('message', (message) => {
           try {
+            console.log('Mensaje recibido del cliente:', socket.id);
             io.emit('message', message);
           } catch (error) {
             console.error('Error al emitir mensaje:', error);
+            socket.emit('error', { message: 'Error al procesar el mensaje' });
           }
         });
 
@@ -63,8 +74,8 @@ const SocketHandler = async (req: any, res: ResponseWithSocket) => {
           console.error('Error de socket:', error);
         });
 
-        socket.on('disconnect', () => {
-          console.log('Cliente desconectado:', socket.id);
+        socket.on('disconnect', (reason) => {
+          console.log('Cliente desconectado:', socket.id, 'razón:', reason);
         });
       });
 
@@ -74,7 +85,10 @@ const SocketHandler = async (req: any, res: ResponseWithSocket) => {
     res.end();
   } catch (error) {
     console.error('Error en el manejador de Socket.IO:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ 
+      error: 'Internal Server Error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 };
 

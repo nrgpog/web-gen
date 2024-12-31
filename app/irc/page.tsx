@@ -37,11 +37,12 @@ export default function IRCPage() {
         path: '/api/socketio',
         addTrailingSlash: false,
         reconnection: true,
-        reconnectionAttempts: 5,
-        reconnectionDelay: 2000,
+        reconnectionAttempts: 10,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
         withCredentials: true,
-        transports: ['websocket'],
-        timeout: 10000,
+        transports: ['polling', 'websocket'],
+        timeout: 20000,
         forceNew: true,
         autoConnect: false
       });
@@ -50,14 +51,14 @@ export default function IRCPage() {
         console.error('Error de conexión:', error);
         setIsConnecting(false);
         setConnected(false);
-        setMessages(prev => [...prev, '* Error de conexión: ' + error.message]);
+        setMessages(prev => [...prev, `* Error de conexión: ${error.message}`]);
       });
 
       socket.on('error', (error) => {
         console.error('Error de socket:', error);
         setIsConnecting(false);
         setConnected(false);
-        setMessages(prev => [...prev, '* Error de socket: ' + error.message]);
+        setMessages(prev => [...prev, `* Error de socket: ${error.message}`]);
       });
 
       socket.on('connect', () => {
@@ -65,6 +66,28 @@ export default function IRCPage() {
         setConnected(true);
         setIsConnecting(false);
         setMessages(prev => [...prev, '* Conectado al servidor']);
+      });
+
+      socket.on('disconnect', (reason) => {
+        console.log('Desconectado del servidor:', reason);
+        setConnected(false);
+        setMessages(prev => [...prev, `* Desconectado del servidor: ${reason}`]);
+        
+        // Intentar reconectar si la desconexión no fue intencional
+        if (reason === 'io server disconnect' || reason === 'transport close') {
+          socket.connect();
+        }
+      });
+
+      socket.on('reconnect', (attemptNumber) => {
+        console.log('Reconectado al servidor después de', attemptNumber, 'intentos');
+        setConnected(true);
+        setMessages(prev => [...prev, `* Reconectado al servidor después de ${attemptNumber} intentos`]);
+      });
+
+      socket.on('reconnect_attempt', (attemptNumber) => {
+        console.log('Intento de reconexión:', attemptNumber);
+        setMessages(prev => [...prev, `* Intento de reconexión ${attemptNumber}`]);
       });
 
       socketRef.current = socket;
@@ -88,12 +111,6 @@ export default function IRCPage() {
         } catch (error) {
           console.error('Error al desencriptar mensaje:', error);
         }
-      });
-
-      socket.on('disconnect', () => {
-        setConnected(false);
-        setIsConnecting(false);
-        console.log('Desconectado del servidor');
       });
 
     } catch (error) {
