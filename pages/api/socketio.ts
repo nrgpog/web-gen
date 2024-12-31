@@ -7,6 +7,8 @@ import { Server as NetServer } from 'http';
 export const config = {
   api: {
     bodyParser: false,
+    externalResolver: true,
+    responseLimit: false
   },
 };
 
@@ -23,8 +25,15 @@ interface ResponseWithSocket extends NextApiResponse {
 }
 
 const SocketHandler = async (req: any, res: ResponseWithSocket) => {
-  if (req.method !== 'GET' && req.method !== 'POST') {
+  if (!['GET', 'POST', 'OPTIONS'].includes(req.method)) {
     res.status(405).json({ error: 'Method not allowed' });
+    return;
+  }
+
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.status(200).end();
     return;
   }
 
@@ -45,16 +54,14 @@ const SocketHandler = async (req: any, res: ResponseWithSocket) => {
           allowedHeaders: ['content-type', 'authorization']
         },
         transports: ['polling', 'websocket'],
-        pingTimeout: 60000,
-        pingInterval: 25000,
-        upgradeTimeout: 30000,
+        pingTimeout: 30000,
+        pingInterval: 10000,
+        upgradeTimeout: 15000,
         allowUpgrades: true,
-        connectTimeout: 45000,
-        cookie: {
-          name: 'io',
-          path: '/',
-          httpOnly: true,
-          sameSite: 'strict'
+        connectTimeout: 20000,
+        maxHttpBufferSize: 1e8,
+        perMessageDeflate: {
+          threshold: 1024
         }
       });
 
@@ -84,7 +91,7 @@ const SocketHandler = async (req: any, res: ResponseWithSocket) => {
     }
 
     if (req.method === 'GET') {
-      res.end();
+      res.status(200).end();
     } else {
       res.status(200).json({ status: 'ok' });
     }

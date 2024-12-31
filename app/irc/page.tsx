@@ -38,13 +38,16 @@ export default function IRCPage() {
         addTrailingSlash: false,
         reconnection: true,
         reconnectionAttempts: 5,
-        reconnectionDelay: 2000,
-        reconnectionDelayMax: 10000,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
         withCredentials: true,
         transports: ['polling', 'websocket'],
-        timeout: 45000,
+        timeout: 20000,
         forceNew: true,
-        autoConnect: false
+        autoConnect: false,
+        extraHeaders: {
+          'Content-Type': 'application/json'
+        }
       });
 
       socket.on('connect_error', (error: Error) => {
@@ -56,9 +59,11 @@ export default function IRCPage() {
         // Intentar reconectar después de un tiempo
         setTimeout(() => {
           if (!socket.connected) {
+            // Intentar con polling primero
+            socket.io.opts.transports = ['polling', 'websocket'];
             socket.connect();
           }
-        }, 5000);
+        }, 3000);
       });
 
       socket.on('error', (error: Error) => {
@@ -83,6 +88,8 @@ export default function IRCPage() {
         if (reason === 'io server disconnect' || reason === 'transport close' || reason === 'ping timeout') {
           setTimeout(() => {
             if (!socket.connected) {
+              // Intentar con polling primero
+              socket.io.opts.transports = ['polling', 'websocket'];
               socket.connect();
             }
           }, 3000);
