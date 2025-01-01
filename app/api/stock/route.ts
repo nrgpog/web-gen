@@ -57,7 +57,7 @@ export async function DELETE(request: Request) {
 
     const body = await request.json();
     console.log('Datos recibidos en el body:', body);
-    const { serverId, menuNumber } = body;
+    const { serverId, stockId, menuNumber } = body;
 
     if (!serverId || !menuNumber) {
       console.log('Faltan datos requeridos:', { serverId, menuNumber });
@@ -67,10 +67,17 @@ export async function DELETE(request: Request) {
       );
     }
 
-    console.log('Intentando eliminar stock y opciones con:', { serverId, menuNumber });
+    console.log('Intentando eliminar stock con:', { serverId, stockId, menuNumber });
     try {
-      await deleteAllStock(serverId, menuNumber);
-      console.log('Eliminación completada exitosamente');
+      if (stockId) {
+        // Eliminar un elemento específico de stock
+        await deleteStockItem(serverId, stockId, menuNumber);
+        console.log('Eliminación de item completada exitosamente');
+      } else {
+        // Eliminar todo el stock
+        await deleteAllStock(serverId, menuNumber);
+        console.log('Eliminación de todo el stock completada exitosamente');
+      }
       return NextResponse.json({ success: true });
     } catch (dbError: any) {
       console.error('Error específico de la base de datos:', dbError);
@@ -89,4 +96,4 @@ export async function DELETE(request: Request) {
   } finally {
     console.log('=== FIN ENDPOINT DELETE STOCK ===');
   }
-} 
+}

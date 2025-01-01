@@ -517,11 +517,11 @@ export default function ServerPage({ params }: { params: Promise<{ serverId: str
 
       console.log('Stock encontrado:', stockItem);
 
-      // Construir datos de la solicitud según la función delete_stock_item
+      // Construir datos de la solicitud con los nombres de parámetros correctos
       const requestData = {
-        server_id: serverId.toString(),
-        stock_id: Number(stockId),
-        menu_number: selectedMenu
+        serverId: serverId.toString(),
+        stockId: Number(stockId),
+        menuNumber: selectedMenu
       };
 
       console.log('Datos de la solicitud:', JSON.stringify(requestData, null, 2));
@@ -601,25 +601,8 @@ export default function ServerPage({ params }: { params: Promise<{ serverId: str
         console.log('Actualizando vista de stock...');
         await fetchOptionStock();
       }
-
-      console.log('=== ELIMINACIÓN DE STOCK COMPLETADA ===\n');
     } catch (error) {
-      console.error('=== ERROR EN ELIMINACIÓN DE STOCK ===');
-      const errorDetails = {
-        message: error instanceof Error ? error.message : 'Error desconocido',
-        stack: error instanceof Error ? error.stack : 'No stack trace disponible',
-        requestData: {
-          serverId,
-          stockId,
-          menuNumber: selectedMenu,
-          selectedViewOption: selectedViewOption?.id
-        },
-        error: error
-      };
-      
-      console.error('Error completo:', JSON.stringify(errorDetails, null, 2));
-      console.error('Stack trace:', error instanceof Error ? error.stack : 'No disponible');
-      
+      console.error('Error al eliminar el stock:', error);
       setMessage({
         type: 'error',
         text: error instanceof Error ? error.message : 'Error al eliminar el stock'
