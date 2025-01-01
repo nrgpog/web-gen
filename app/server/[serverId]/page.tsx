@@ -831,8 +831,14 @@ export default function ServerPage({ params }: { params: Promise<{ serverId: str
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="text-xl">Cargando...</div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-blue-950 flex items-center justify-center">
+        <div className="text-center p-8 bg-black/30 backdrop-blur-xl rounded-xl border border-white/10">
+          <div className="relative w-16 h-16 mx-auto mb-6">
+            <div className="absolute top-0 left-0 w-full h-full rounded-full border-4 border-blue-500/20"></div>
+            <div className="absolute top-0 left-0 w-full h-full rounded-full border-4 border-blue-500 border-t-transparent animate-spin"></div>
+          </div>
+          <div className="text-xl text-white/90 font-medium">Cargando<span className="animate-pulse">...</span></div>
+        </div>
       </div>
     );
   }
