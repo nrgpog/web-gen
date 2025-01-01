@@ -80,7 +80,7 @@ export default function Home() {
       <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-blue-950 flex items-center justify-center p-4">
         <div className="text-center max-w-md w-full p-8 bg-black/30 backdrop-blur-xl rounded-xl border border-white/10">
           <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
-            Discord Server List
+            Lmao V4 Gen
           </h1>
           <p className="text-white/70 mb-8">
             Gestiona tus servidores de Discord de forma fácil y eficiente
@@ -109,7 +109,7 @@ export default function Home() {
         {/* Barra lateral */}
         <div className="w-full lg:w-64 bg-black/40 backdrop-blur-xl border-b lg:border-b-0 lg:border-r border-white/10 p-6">
           <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
-            Herramientas
+            Lmao V4 Gen
           </h2>
           <div className="flex lg:flex-col gap-2">
             <button

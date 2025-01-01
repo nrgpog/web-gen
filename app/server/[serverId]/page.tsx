@@ -874,7 +874,7 @@ export default function ServerPage({ params }: { params: Promise<{ serverId: str
               Volver
             </button>
             <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
-              Gen - {serverName}
+              Lmao V4 Gen - {serverName}
             </h2>
           </div>
           <nav className="p-4">
