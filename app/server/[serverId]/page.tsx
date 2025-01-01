@@ -859,489 +859,508 @@ export default function ServerPage({ params }: { params: Promise<{ serverId: str
   }
 
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden">
-      {/* Sidebar */}
-      <div className="w-64 bg-white shadow-md flex-shrink-0">
-        <div className="p-4 border-b">
-          <button
-            onClick={() => router.push('/')}
-            className="flex items-center text-gray-600 hover:text-gray-900 mb-4 transition-colors"
-          >
-            <svg
-              className="w-6 h-6 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
+      <div className="flex flex-col lg:flex-row min-h-screen">
+        {/* Sidebar */}
+        <div className="lg:w-64 bg-black/40 backdrop-blur-xl border-r border-white/10">
+          <div className="p-6 border-b border-white/10">
+            <button
+              onClick={() => router.push('/')}
+              className="flex items-center text-white/70 hover:text-white mb-4 transition-all hover:translate-x-1"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M10 19l-7-7m0 0l7-7m-7 7h18"
-              />
-            </svg>
-            Volver
-          </button>
-          <h2 className="text-xl font-bold">Gen - {serverName}</h2>
+              <svg
+                className="w-5 h-5 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
+              </svg>
+              Volver
+            </button>
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
+              Gen - {serverName}
+            </h2>
+          </div>
+          <nav className="p-4">
+            <ul className="space-y-2">
+              <li>
+                <button
+                  onClick={() => {
+                    setActiveTab('add');
+                    setMessage(null);
+                  }}
+                  className={`w-full px-4 py-3 rounded-lg text-left transition-all ${
+                    activeTab === 'add'
+                      ? 'bg-gray-800/50 text-white border border-gray-700 shadow-lg shadow-black/20'
+                      : 'text-white/70 hover:bg-white/5 hover:text-white'
+                  } font-medium`}
+                >
+                  Agregar Stock
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => {
+                    setActiveTab('view');
+                    setMessage(null);
+                  }}
+                  className={`w-full px-4 py-3 rounded-lg text-left transition-all ${
+                    activeTab === 'view'
+                      ? 'bg-gray-800/50 text-white border border-gray-700 shadow-lg shadow-black/20'
+                      : 'text-white/70 hover:bg-white/5 hover:text-white'
+                  } font-medium`}
+                >
+                  Administrar Stock
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => {
+                    setActiveTab('config');
+                    setMessage(null);
+                  }}
+                  className={`w-full px-4 py-3 rounded-lg text-left transition-all ${
+                    activeTab === 'config'
+                      ? 'bg-gray-800/50 text-white border border-gray-700 shadow-lg shadow-black/20'
+                      : 'text-white/70 hover:bg-white/5 hover:text-white'
+                  } font-medium`}
+                >
+                  Configuración Bot
+                </button>
+              </li>
+            </ul>
+          </nav>
         </div>
-        <nav className="p-4">
-          <ul>
-            <li className="mb-2">
-              <button
-                onClick={() => {
-                  setActiveTab('add');
-                  setMessage(null);
-                }}
-                className={`block w-full px-4 py-2 rounded-md text-left ${
-                  activeTab === 'add'
-                    ? 'bg-blue-50 text-blue-600'
-                    : 'hover:bg-gray-50'
-                } font-medium transition-colors`}
-              >
-                Agregar Stock
-              </button>
-            </li>
-            <li className="mb-2">
-              <button
-                onClick={() => {
-                  setActiveTab('view');
-                  setMessage(null);
-                }}
-                className={`block w-full px-4 py-2 rounded-md text-left ${
-                  activeTab === 'view'
-                    ? 'bg-blue-50 text-blue-600'
-                    : 'hover:bg-gray-50'
-                } font-medium transition-colors`}
-              >
-                Administrar Stock
-              </button>
-            </li>
-            <li className="mb-2">
-              <button
-                onClick={() => {
-                  setActiveTab('config');
-                  setMessage(null);
-                }}
-                className={`block w-full px-4 py-2 rounded-md text-left ${
-                  activeTab === 'config'
-                    ? 'bg-blue-50 text-blue-600'
-                    : 'hover:bg-gray-50'
-                } font-medium transition-colors`}
-              >
-                Configuración Bot
-              </button>
-            </li>
-          </ul>
-        </nav>
-      </div>
 
-      {/* Contenido principal */}
-      <div className="flex-1 overflow-hidden flex flex-col">
-        <div className="p-8 overflow-y-auto flex-1">
-          <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
-            {/* Selector de Menú */}
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold mb-4">Seleccionar Menú</h2>
-              <div className="flex gap-4">
-                <button
-                  onClick={() => {
-                    setSelectedMenu(1);
-                    setSelectedOption(null);
-                    setSelectedViewOption(null);
-                    setStockData('');
-                  }}
-                  className={`flex-1 py-2 px-4 rounded-md ${
-                    selectedMenu === 1
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 hover:bg-gray-200'
-                  } transition-colors`}
-                >
-                  Menú 1
-                </button>
-                <button
-                  onClick={() => {
-                    setSelectedMenu(2);
-                    setSelectedOption(null);
-                    setSelectedViewOption(null);
-                    setStockData('');
-                  }}
-                  className={`flex-1 py-2 px-4 rounded-md ${
-                    selectedMenu === 2
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 hover:bg-gray-200'
-                  } transition-colors`}
-                >
-                  Menú 2
-                </button>
+        {/* Contenido principal */}
+        <div className="flex-1 p-4 lg:p-8">
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-black/40 backdrop-blur-xl rounded-2xl shadow-xl border border-white/10 p-6 lg:p-8">
+              {/* Selector de Menú */}
+              <div className="mb-8">
+                <h2 className="text-xl font-semibold mb-4 text-white">Seleccionar Menú</h2>
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => {
+                      setSelectedMenu(1);
+                      setSelectedOption(null);
+                      setSelectedViewOption(null);
+                      setStockData('');
+                    }}
+                    className={`flex-1 py-3 px-6 rounded-lg transition-all ${
+                      selectedMenu === 1
+                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                        : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white border border-white/5'
+                    }`}
+                  >
+                    Menú 1
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedMenu(2);
+                      setSelectedOption(null);
+                      setSelectedViewOption(null);
+                      setStockData('');
+                    }}
+                    className={`flex-1 py-3 px-6 rounded-lg transition-all ${
+                      selectedMenu === 2
+                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                        : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white border border-white/5'
+                    }`}
+                  >
+                    Menú 2
+                  </button>
+                </div>
               </div>
-            </div>
 
-            {activeTab === 'add' ? (
-              <div className="space-y-6">
-                <h1 className="text-2xl font-bold">Agregar Stock - Menú {selectedMenu}</h1>
-                
-                {message && (
-                  <div className={`p-4 rounded-md ${
-                    message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-                  }`}>
-                    {message.text}
-                  </div>
-                )}
-
-                {/* Sección de Plantillas */}
-                <div className="p-4 border border-gray-200 rounded-md">
-                  <h3 className="text-lg font-semibold mb-4">Plantillas de Opciones</h3>
-                  <div className="grid grid-cols-3 gap-4 mb-4">
-                    {Object.keys(templates).map((templateName) => (
-                      <button
-                        key={templateName}
-                        onClick={() => {
-                          setSelectedTemplate(templateName);
-                          setPreviewData(templates[templateName as keyof typeof templates]);
-                        }}
-                        className={`p-3 rounded-md text-center ${
-                          selectedTemplate === templateName
-                            ? 'bg-blue-100 text-blue-700 border-2 border-blue-500'
-                            : 'bg-gray-50 hover:bg-gray-100'
-                        } transition-colors capitalize`}
-                      >
-                        {templateName}
-                      </button>
-                    ))}
-                  </div>
-
-                  {selectedTemplate && (
-                    <div className="mt-4 p-4 bg-gray-50 rounded-md">
-                      <div className="flex justify-between items-center mb-4">
-                        <h4 className="font-medium">Vista previa de las opciones a crear: {selectedTemplate}</h4>
-                        <button
-                          onClick={() => {
-                            setSelectedTemplate(null);
-                            setPreviewData([]);
-                          }}
-                          className="text-sm text-gray-500 hover:text-gray-700"
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-                      <div className="space-y-2">
-                        {previewData.map((item, index) => (
-                          <div key={index} className="p-2 bg-white rounded border border-gray-200">
-                            {item}
-                          </div>
-                        ))}
-                      </div>
-                      <button
-                        onClick={handleApplyTemplate}
-                        disabled={isAddingOption}
-                        className={`mt-4 w-full ${
-                          isAddingOption
-                            ? 'bg-gray-400 cursor-not-allowed'
-                            : 'bg-green-600 hover:bg-green-700'
-                        } text-white px-4 py-2 rounded-md transition-colors`}
-                      >
-                        {isAddingOption ? 'Creando opciones...' : 'Crear Opciones'}
-                      </button>
+              {activeTab === 'add' ? (
+                <div className="space-y-6">
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
+                    Agregar Stock - Menú {selectedMenu}
+                  </h1>
+                  
+                  {message && (
+                    <div className={`p-4 rounded-lg backdrop-blur-xl ${
+                      message.type === 'success' 
+                        ? 'bg-green-500/20 text-green-300 border border-green-500/50' 
+                        : 'bg-red-500/20 text-red-300 border border-red-500/50'
+                    }`}>
+                      {message.text}
                     </div>
                   )}
-                </div>
 
-                {/* Botón para eliminar todas las opciones */}
-                <button
-                  onClick={handleDeleteAllStock}
-                  disabled={isDeletingAllStock}
-                  className={`w-full ${
-                    isDeletingAllStock
-                      ? 'bg-red-400 cursor-not-allowed'
-                      : 'bg-red-600 hover:bg-red-700'
-                  } text-white px-4 py-2 rounded-md transition-colors mb-4`}
-                >
-                  {isDeletingAllStock ? 'Eliminando...' : 'Eliminar Opciones'}
-                </button>
+                  {/* Sección de Plantillas */}
+                  <div className="p-6 rounded-xl bg-white/5 border border-white/10">
+                    <h3 className="text-xl font-semibold mb-4 text-white">Plantillas de Opciones</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                      {Object.keys(templates).map((templateName) => (
+                        <button
+                          key={templateName}
+                          onClick={() => {
+                            setSelectedTemplate(templateName);
+                            setPreviewData(templates[templateName as keyof typeof templates]);
+                          }}
+                          className={`p-4 rounded-lg text-center transition-all ${
+                            selectedTemplate === templateName
+                              ? 'bg-blue-600/20 text-blue-400 border border-blue-500/50 shadow-lg shadow-blue-500/20'
+                              : 'bg-black/20 text-white/70 hover:bg-black/30 hover:text-white border border-white/5'
+                          } capitalize`}
+                        >
+                          {templateName}
+                        </button>
+                      ))}
+                    </div>
 
-                {/* Sección para agregar nueva opción */}
-                <div className="p-4 border border-gray-200 rounded-md">
-                  <h3 className="text-lg font-semibold mb-4">Agregar Nueva Opción al Menú {selectedMenu}</h3>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={newOptionName}
-                      onChange={(e) => setNewOptionName(e.target.value)}
-                      placeholder="Nombre de la opción"
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      disabled={isAddingOption}
-                    />
+                    {selectedTemplate && (
+                      <div className="mt-4 p-4 bg-gray-50 rounded-md">
+                        <div className="flex justify-between items-center mb-4">
+                          <h4 className="font-medium">Vista previa de las opciones a crear: {selectedTemplate}</h4>
+                          <button
+                            onClick={() => {
+                              setSelectedTemplate(null);
+                              setPreviewData([]);
+                            }}
+                            className="text-sm text-gray-500 hover:text-gray-700"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                        <div className="space-y-2">
+                          {previewData.map((item, index) => (
+                            <div key={index} className="p-2 bg-white rounded border border-gray-200">
+                              {item}
+                            </div>
+                          ))}
+                        </div>
+                        <button
+                          onClick={handleApplyTemplate}
+                          disabled={isAddingOption}
+                          className={`mt-4 w-full ${
+                            isAddingOption
+                              ? 'bg-gray-400 cursor-not-allowed'
+                              : 'bg-green-600 hover:bg-green-700'
+                          } text-white px-4 py-2 rounded-md transition-colors`}
+                        >
+                          {isAddingOption ? 'Creando opciones...' : 'Crear Opciones'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Botón para eliminar todas las opciones */}
+                  <button
+                    onClick={handleDeleteAllStock}
+                    disabled={isDeletingAllStock}
+                    className={`w-full py-3 px-6 rounded-lg transition-all ${
+                      isDeletingAllStock
+                        ? 'bg-red-500/50 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900'
+                    } text-white shadow-lg shadow-red-500/20`}
+                  >
+                    {isDeletingAllStock ? 'Eliminando...' : 'Eliminar Opciones'}
+                  </button>
+
+                  {/* Sección para agregar nueva opción */}
+                  <div className="p-6 rounded-xl bg-white/5 border border-white/10">
+                    <h3 className="text-xl font-semibold mb-4 text-white">
+                      Agregar Nueva Opción al Menú {selectedMenu}
+                    </h3>
+                    <div className="flex gap-3">
+                      <input
+                        type="text"
+                        value={newOptionName}
+                        onChange={(e) => setNewOptionName(e.target.value)}
+                        placeholder="Nombre de la opción"
+                        className="flex-1 px-4 py-3 bg-black/20 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white placeholder-white/50"
+                        disabled={isAddingOption}
+                      />
+                      <button
+                        onClick={handleAddOption}
+                        disabled={isAddingOption}
+                        className={`px-6 py-3 rounded-lg transition-all ${
+                          isAddingOption
+                            ? 'bg-blue-500/50 cursor-not-allowed'
+                            : 'bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900'
+                        } text-white shadow-lg shadow-blue-500/20`}
+                      >
+                        {isAddingOption ? 'Agregando...' : 'Agregar'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Lista de opciones y formulario de stock */}
+                  <div className="p-6 rounded-xl bg-white/5 border border-white/10">
+                    <label className="block text-lg font-medium text-white mb-4">
+                      Seleccionar Opción del Menú {selectedMenu}
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6 max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-blue-900">
+                      {options.map((option) => (
+                        <div
+                          key={option.id}
+                          className={`p-4 rounded-lg text-left flex items-center justify-between transition-all ${
+                            selectedOption?.id === option.id
+                              ? 'bg-blue-600/20 text-blue-400 border border-blue-500/50 shadow-lg shadow-blue-500/20'
+                              : 'bg-black/20 text-white/70 hover:bg-black/30 hover:text-white border border-white/5'
+                          }`}
+                        >
+                          <button
+                            onClick={() => setSelectedOption(option)}
+                            className="flex items-center space-x-3 flex-grow"
+                          >
+                            <StockIcon />
+                            <span>{option.name}</span>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteOption(option.id);
+                            }}
+                            className="p-2 text-red-400 hover:text-red-300 transition-colors rounded-lg hover:bg-red-500/10"
+                            title="Eliminar opción"
+                          >
+                            <TrashIcon />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {selectedOption && (
+                      <div className="mt-6">
+                        <label className="block text-lg font-medium text-white mb-4">
+                          Data para {selectedOption.name}
+                        </label>
+                        <textarea
+                          className="w-full h-48 px-4 py-3 bg-black/20 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white placeholder-white/50 resize-none"
+                          placeholder="Pega o escribe tu data aquí..."
+                          value={stockData}
+                          onChange={(e) => setStockData(e.target.value)}
+                          disabled={isLoading}
+                        />
+                      </div>
+                    )}
+
                     <button
-                      onClick={handleAddOption}
-                      disabled={isAddingOption}
-                      className={`px-4 py-2 rounded-md ${
-                        isAddingOption
-                          ? 'bg-gray-400 cursor-not-allowed'
-                          : 'bg-green-600 hover:bg-green-700'
-                      } text-white transition-colors`}
+                      onClick={handleSubmit}
+                      disabled={isLoading || !selectedOption}
+                      className={`w-full mt-6 py-3 px-6 rounded-lg transition-all ${
+                        isLoading || !selectedOption
+                          ? 'bg-blue-500/50 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900'
+                      } text-white shadow-lg shadow-blue-500/20`}
                     >
-                      {isAddingOption ? 'Agregando...' : 'Agregar'}
+                      {isLoading ? 'Subiendo...' : 'Subir'}
                     </button>
                   </div>
                 </div>
-
-                {/* Lista de opciones y formulario de stock */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Seleccionar Opción del Menú {selectedMenu}
-                  </label>
-                  <div className="grid grid-cols-2 gap-2 mb-4 max-h-[300px] overflow-y-auto">
-                    {options.map((option) => (
-                      <div
-                        key={option.id}
-                        className={`p-2 rounded-md text-left flex items-center justify-between ${
-                          selectedOption?.id === option.id
-                            ? 'bg-blue-50 text-blue-600 border-2 border-blue-500'
-                            : 'bg-gray-50 hover:bg-gray-100'
-                        } transition-colors`}
-                      >
-                        <button
-                          onClick={() => setSelectedOption(option)}
-                          className="flex items-center space-x-2 flex-grow"
-                        >
-                          <StockIcon />
-                          <span>{option.name}</span>
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteOption(option.id);
-                          }}
-                          className="p-1 text-red-500 hover:text-red-700 transition-colors"
-                          title="Eliminar opción"
-                        >
-                          <TrashIcon />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-
-                  {selectedOption && (
-                    <div className="mt-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Data para {selectedOption.name}
-                      </label>
-                      <textarea
-                        className="w-full h-48 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Pega o escribe tu data aquí..."
-                        value={stockData}
-                        onChange={(e) => setStockData(e.target.value)}
-                        disabled={isLoading}
-                      />
+              ) : activeTab === 'view' ? (
+                <>
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent mb-8">
+                    Administrar Stock - Menú {selectedMenu}
+                  </h1>
+                  
+                  {message && (
+                    <div className={`p-4 mb-6 rounded-lg backdrop-blur-xl ${
+                      message.type === 'success' 
+                        ? 'bg-green-500/20 text-green-300 border border-green-500/50' 
+                        : 'bg-red-500/20 text-red-300 border border-red-500/50'
+                    }`}>
+                      {message.text}
                     </div>
                   )}
-                </div>
 
-                <button
-                  onClick={handleSubmit}
-                  disabled={isLoading || !selectedOption}
-                  className={`w-full ${
-                    isLoading || !selectedOption
-                      ? 'bg-blue-400 cursor-not-allowed'
-                      : 'bg-blue-600 hover:bg-blue-700'
-                  } text-white px-4 py-2 rounded-md transition-colors mb-4`}
-                >
-                  {isLoading ? 'Subiendo...' : 'Subir'}
-                </button>
-              </div>
-            ) : activeTab === 'view' ? (
-              <>
-                <h1 className="text-2xl font-bold mb-6">Administrar Stock - Menú {selectedMenu}</h1>
-                
-                {message && (
-                  <div className={`p-4 mb-4 rounded-md ${
-                    message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-                  }`}>
-                    {message.text}
-                  </div>
-                )}
-
-                {/* Lista de opciones */}
-                <div className="mb-6">
-                  <h2 className="text-lg font-semibold mb-4">Selecciona una opción para ver su stock</h2>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {options.map((option) => (
-                      <div
-                        key={option.id}
-                        className={`p-4 rounded-lg ${
-                          selectedViewOption?.id === option.id
-                            ? 'bg-blue-50 text-blue-600 border-2 border-blue-500'
-                            : 'bg-gray-50 hover:bg-gray-100'
-                        } transition-colors flex justify-between items-center`}
-                      >
-                        <button
-                          onClick={() => setSelectedViewOption(option)}
-                          className="flex-1 text-center flex items-center justify-center space-x-2"
+                  {/* Lista de opciones */}
+                  <div className="mb-8">
+                    <h2 className="text-xl font-semibold mb-6 text-white">
+                      Selecciona una opción para ver su stock
+                    </h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {options.map((option) => (
+                        <div
+                          key={option.id}
+                          className={`p-4 rounded-lg transition-all ${
+                            selectedViewOption?.id === option.id
+                              ? 'bg-blue-600/20 text-blue-400 border border-blue-500/50 shadow-lg shadow-blue-500/20'
+                              : 'bg-black/20 text-white/70 hover:bg-black/30 hover:text-white border border-white/5'
+                          } flex justify-between items-center`}
                         >
-                          <StockIcon />
-                          <span>{option.name}</span>
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteOption(option.id);
-                          }}
-                          className="p-1 text-red-500 hover:text-red-700 transition-colors"
-                          title="Eliminar opción"
-                        >
-                          <TrashIcon />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Stock de la opción seleccionada */}
-                {selectedViewOption && (
-                  <div>
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-lg font-semibold">
-                        Stock de: {selectedViewOption.name}
-                      </h3>
-                      <button
-                        onClick={() => setSelectedViewOption(null)}
-                        className="text-sm text-gray-500 hover:text-gray-700"
-                      >
-                        Volver a opciones
-                      </button>
-                    </div>
-
-                    {isLoadingStock ? (
-                      <div className="text-center py-8">Cargando stock...</div>
-                    ) : stockItems.length === 0 ? (
-                      <div className="text-center py-8 text-gray-500">
-                        No hay stock disponible para esta opción
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {stockItems.map((item) => (
-                          <div
-                            key={item.id}
-                            className="relative border border-gray-200 rounded-lg p-4 hover:bg-gray-50"
+                          <button
+                            onClick={() => setSelectedViewOption(option)}
+                            className="flex items-center space-x-3 flex-grow"
                           >
-                            <div className="flex justify-between items-start mb-2">
-                              <div className="font-mono text-sm text-gray-500">
-                                ID: {item.id}
-                              </div>
-                              <div className="flex items-center gap-4">
-                                <div className="text-sm text-gray-500">
-                                  {new Date(item.created_at).toLocaleString()}
+                            <StockIcon />
+                            <span>{option.name}</span>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteOption(option.id);
+                            }}
+                            className="p-2 text-red-400 hover:text-red-300 transition-colors rounded-lg hover:bg-red-500/10"
+                            title="Eliminar opción"
+                          >
+                            <TrashIcon />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Stock de la opción seleccionada */}
+                  {selectedViewOption && (
+                    <div className="p-6 rounded-xl bg-white/5 border border-white/10">
+                      <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-xl font-semibold text-white">
+                          Stock de: {selectedViewOption.name}
+                        </h3>
+                        <button
+                          onClick={() => setSelectedViewOption(null)}
+                          className="text-white/70 hover:text-white transition-colors"
+                        >
+                          Volver a opciones
+                        </button>
+                      </div>
+
+                      {isLoadingStock ? (
+                        <div className="text-center py-12 text-white/70">Cargando stock...</div>
+                      ) : stockItems.length === 0 ? (
+                        <div className="text-center py-12 text-white/70">
+                          No hay stock disponible para esta opción
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {stockItems.map((item) => (
+                            <div
+                              key={item.id}
+                              className="relative border border-white/10 rounded-lg p-4 bg-black/20 hover:bg-black/30 transition-all group"
+                            >
+                              <div className="flex justify-between items-start">
+                                <div className="font-mono text-sm text-white/50 mb-2">
+                                  ID: {item.id}
                                 </div>
                                 <button
                                   onClick={() => handleDeleteStock(item.id)}
-                                  className="p-1 text-red-500 hover:text-red-700 transition-colors"
+                                  className="p-2 text-red-400 hover:text-red-300 transition-colors rounded-lg hover:bg-red-500/10"
                                   title="Eliminar stock"
                                 >
                                   <TrashIcon />
                                 </button>
                               </div>
+                              <div className="text-white/90 group-hover:text-white">
+                                {item.data}
+                              </div>
                             </div>
-                            <div className="font-mono text-sm whitespace-pre-wrap break-all">
-                              {item.data}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </>
-            ) : (
-              <>
-                <h1 className="text-2xl font-bold mb-6">Configuración del Bot - Menú {selectedMenu}</h1>
-                
-                {message && (
-                  <div className={`p-4 mb-4 rounded-md ${
-                    message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-                  }`}>
-                    {message.text}
-                  </div>
-                )}
-
-                <div className="space-y-6">
-                  <div className="p-6 bg-white rounded-lg shadow-md">
-                    <h2 className="text-xl font-semibold mb-4">Configuración de Cooldown</h2>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Cooldown Menú {selectedMenu} (segundos)
-                        </label>
-                        <input
-                          type="number"
-                          value={selectedMenu === 1 ? menu1Cooldown : menu2Cooldown}
-                          onChange={(e) => {
-                            const value = Math.max(0, parseInt(e.target.value) || 0);
-                            selectedMenu === 1 ? setMenu1Cooldown(value) : setMenu2Cooldown(value);
-                          }}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          min="0"
-                        />
-                        <p className="mt-1 text-sm text-gray-500">
-                          Tiempo de espera entre generaciones para el Menú {selectedMenu}
-                        </p>
-                      </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  </div>
+                  )}
+                </>
+              ) : (
+                <div className="space-y-6">
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-200 to-white bg-clip-text text-transparent mb-8">
+                    Configuración del Bot - Menú {selectedMenu}
+                  </h1>
 
-                  <div className="p-6 bg-white rounded-lg shadow-md">
-                    <h2 className="text-xl font-semibold mb-4">Configuración de Borrado Automático</h2>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  {message && (
+                    <div className={`p-4 mb-6 rounded-lg backdrop-blur-xl ${
+                      message.type === 'success' 
+                        ? 'bg-green-500/20 text-green-300 border border-green-500/50' 
+                        : 'bg-red-500/20 text-red-300 border border-red-500/50'
+                    }`}>
+                      {message.text}
+                    </div>
+                  )}
+
+                  <div className="space-y-6">
+                    {/* Configuración de Cooldown */}
+                    <div className="p-6 rounded-xl bg-black/30 border border-white/10">
+                      <h2 className="text-xl font-semibold mb-4 text-white">Configuración de Cooldown</h2>
+                      <div className="space-y-4">
                         <div>
-                          <h3 className="font-medium text-gray-900">Borrado Automático Menú {selectedMenu}</h3>
-                          <p className="text-sm text-gray-500">
-                            El stock se eliminará automáticamente después de ser generado
+                          <label className="block text-base font-medium text-white/90 mb-2">
+                            Cooldown Menú {selectedMenu} (segundos)
+                          </label>
+                          <input
+                            type="number"
+                            value={selectedMenu === 1 ? menu1Cooldown : menu2Cooldown}
+                            onChange={(e) => {
+                              const value = Math.max(0, parseInt(e.target.value) || 0);
+                              selectedMenu === 1 ? setMenu1Cooldown(value) : setMenu2Cooldown(value);
+                            }}
+                            className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/30 text-white placeholder-white/50"
+                            min="0"
+                          />
+                          <p className="mt-2 text-sm text-white/60">
+                            Tiempo de espera entre generaciones para el Menú {selectedMenu}
                           </p>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            selectedMenu === 1 
-                              ? setMenu1DeleteOnUse(!menu1DeleteOnUse)
-                              : setMenu2DeleteOnUse(!menu2DeleteOnUse);
-                          }}
-                          className={`${
-                            (selectedMenu === 1 ? menu1DeleteOnUse : menu2DeleteOnUse) 
-                              ? 'bg-blue-600' 
-                              : 'bg-gray-200'
-                          } relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
-                        >
-                          <span
-                            aria-hidden="true"
-                            className={`${
-                              (selectedMenu === 1 ? menu1DeleteOnUse : menu2DeleteOnUse)
-                                ? 'translate-x-5'
-                                : 'translate-x-0'
-                            } pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
-                          />
-                        </button>
                       </div>
                     </div>
-                  </div>
 
-                  <button
-                    onClick={handleSaveBotConfig}
-                    disabled={isSavingConfig}
-                    className={`w-full ${
-                      isSavingConfig
-                        ? 'bg-blue-400 cursor-not-allowed'
-                        : 'bg-blue-600 hover:bg-blue-700'
-                    } text-white px-4 py-2 rounded-md transition-colors`}
-                  >
-                    {isSavingConfig ? 'Guardando...' : 'Guardar Configuración'}
-                  </button>
+                    {/* Configuración de Borrado Automático */}
+                    <div className="p-6 rounded-xl bg-black/30 border border-white/10">
+                      <h2 className="text-xl font-semibold mb-4 text-white">Configuración de Borrado Automático</h2>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between p-4 bg-black/20 rounded-lg border border-white/5">
+                          <div>
+                            <h3 className="font-medium text-white">Borrado Automático Menú {selectedMenu}</h3>
+                            <p className="text-sm text-white/60">
+                              El stock se eliminará automáticamente después de ser generado
+                            </p>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              selectedMenu === 1 
+                                ? setMenu1DeleteOnUse(!menu1DeleteOnUse)
+                                : setMenu2DeleteOnUse(!menu2DeleteOnUse);
+                            }}
+                            className={`${
+                              (selectedMenu === 1 ? menu1DeleteOnUse : menu2DeleteOnUse) 
+                                ? 'bg-gray-200' 
+                                : 'bg-gray-700'
+                            } relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-white/30`}
+                          >
+                            <span
+                              aria-hidden="true"
+                              className={`${
+                                (selectedMenu === 1 ? menu1DeleteOnUse : menu2DeleteOnUse)
+                                  ? 'translate-x-5 bg-gray-800'
+                                  : 'translate-x-0 bg-white'
+                              } pointer-events-none inline-block h-5 w-5 transform rounded-full shadow ring-0 transition duration-200 ease-in-out`}
+                            />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Botón de Guardar */}
+                    <button
+                      onClick={handleSaveBotConfig}
+                      disabled={isSavingConfig}
+                      className={`w-full py-3 px-6 rounded-lg transition-all ${
+                        isSavingConfig
+                          ? 'bg-gray-700/50 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-gray-800 to-black hover:from-gray-900 hover:to-gray-800'
+                      } text-white shadow-lg shadow-black/20`}
+                    >
+                      {isSavingConfig ? 'Guardando...' : 'Guardar Configuración'}
+                    </button>
+                  </div>
                 </div>
-              </>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
-} 
+}

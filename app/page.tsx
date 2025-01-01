@@ -3,12 +3,15 @@
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 interface Guild {
   id: string;
   name: string;
   icon: string | null;
   owner: boolean;
+  memberCount: number;
+  status: string;
 }
 
 export default function Home() {
@@ -86,32 +89,44 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-white to-blue-900 flex">
       {/* Barra lateral */}
-      <div className="w-64 bg-gray-800 text-white p-4">
-        <h2 className="text-xl font-bold mb-4">Herramientas</h2>
-        <button
-          onClick={() => router.push('/decoraciones')}
-          className="w-full text-left px-4 py-2 rounded hover:bg-gray-700 transition-colors"
-        >
-          Decoraciones
-        </button>
-        <button
-          onClick={() => router.push('/servidores')}
-          className="w-full text-left px-4 py-2 rounded hover:bg-gray-700 transition-colors"
-        >
-          Servidores
-        </button>
+      <div className="w-64 bg-black/20 backdrop-blur-xl border-r border-white/10 text-gray-900 p-6">
+        <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-gray-900 via-gray-800 to-blue-800 bg-clip-text text-transparent">
+          Herramientas
+        </h2>
+        <div className="space-y-2">
+          <button
+            onClick={() => router.push('/decoraciones')}
+            className="w-full text-left px-4 py-3 rounded-lg bg-white/10 hover:bg-white/20 transition-all text-gray-900 font-medium flex items-center space-x-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+            </svg>
+            <span>Decoraciones</span>
+          </button>
+          <button
+            onClick={() => router.push('/servidores')}
+            className="w-full text-left px-4 py-3 rounded-lg bg-white/10 hover:bg-white/20 transition-all text-gray-900 font-medium flex items-center space-x-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm3.293 1.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L7.586 10 5.293 7.707a1 1 0 010-1.414zM11 12a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+            </svg>
+            <span>Servidores</span>
+          </button>
+        </div>
       </div>
 
       {/* Contenido principal */}
       <div className="flex-1 p-8">
         <div className="max-w-4xl mx-auto">
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold">Tus servidores de Discord (Dueño)</h1>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-blue-800 bg-clip-text text-transparent">
+              Tus servidores de Discord (Dueño)
+            </h1>
             <button
               onClick={() => signOut()}
-              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
+              className="px-4 py-2 rounded-lg bg-red-500/90 hover:bg-red-600/90 transition-colors text-white backdrop-blur-xl"
             >
               Cerrar sesión
             </button>
@@ -119,7 +134,7 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {guilds.length === 0 ? (
-              <div className="col-span-full text-center py-8 bg-white rounded-lg shadow-md">
+              <div className="col-span-full text-center py-8 bg-white/80 backdrop-blur-xl rounded-lg shadow-md border border-white/20">
                 <p className="text-gray-600">No se encontraron servidores donde seas dueño</p>
               </div>
             ) : (
@@ -127,7 +142,7 @@ export default function Home() {
                 <div
                   key={guild.id}
                   onClick={() => handleGuildClick(guild.id)}
-                  className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                  className="bg-white/80 backdrop-blur-xl p-4 rounded-lg shadow-md hover:shadow-lg transition-all hover:bg-white/90 cursor-pointer border border-white/20"
                 >
                   <div className="flex items-center space-x-4">
                     {guild.icon ? (
@@ -137,13 +152,13 @@ export default function Home() {
                         className="w-12 h-12 rounded-full"
                       />
                     ) : (
-                      <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-                        <span className="text-xl font-bold text-gray-500">
+                      <div className="w-12 h-12 bg-gradient-to-br from-gray-900 via-gray-800 to-blue-800 rounded-full flex items-center justify-center">
+                        <span className="text-xl font-bold text-white">
                           {guild.name.charAt(0)}
                         </span>
                       </div>
                     )}
-                    <h2 className="font-semibold">{guild.name}</h2>
+                    <h2 className="font-semibold text-gray-900">{guild.name}</h2>
                   </div>
                 </div>
               ))
