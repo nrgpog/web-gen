@@ -946,7 +946,7 @@ export default function ServerPage({ params }: { params: Promise<{ serverId: str
               {/* Selector de Menú */}
               <div className="mb-8">
                 <h2 className="text-xl font-semibold mb-4 text-white">Seleccionar Menú</h2>
-                <div className="flex gap-4">
+                <div className="flex flex-wrap gap-4 items-center">
                   <button
                     onClick={() => {
                       setSelectedMenu(1);
@@ -954,10 +954,10 @@ export default function ServerPage({ params }: { params: Promise<{ serverId: str
                       setSelectedViewOption(null);
                       setStockData('');
                     }}
-                    className={`flex-1 py-3 px-6 rounded-lg transition-all ${
+                    className={`px-6 py-3 rounded-lg transition-all flex-grow sm:flex-grow-0 ${
                       selectedMenu === 1
-                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
-                        : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white border border-white/5'
+                        ? 'bg-white/10 text-white'
+                        : 'text-white/70 hover:text-white hover:bg-white/5'
                     }`}
                   >
                     Menú 1
@@ -969,10 +969,10 @@ export default function ServerPage({ params }: { params: Promise<{ serverId: str
                       setSelectedViewOption(null);
                       setStockData('');
                     }}
-                    className={`flex-1 py-3 px-6 rounded-lg transition-all ${
+                    className={`px-6 py-3 rounded-lg transition-all flex-grow sm:flex-grow-0 ${
                       selectedMenu === 2
-                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
-                        : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white border border-white/5'
+                        ? 'bg-white/10 text-white'
+                        : 'text-white/70 hover:text-white hover:bg-white/5'
                     }`}
                   >
                     Menú 2
@@ -997,9 +997,9 @@ export default function ServerPage({ params }: { params: Promise<{ serverId: str
                   )}
 
                   {/* Sección de Plantillas */}
-                  <div className="p-6 rounded-xl bg-white/5 border border-white/10">
-                    <h3 className="text-xl font-semibold mb-4 text-white">Plantillas de Opciones</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                  <div className="p-6 rounded-xl bg-black/30 border border-white/10 mb-6">
+                    <h3 className="text-xl font-semibold mb-6 text-white">Plantillas de Opciones</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                       {Object.keys(templates).map((templateName) => (
                         <button
                           key={templateName}
@@ -1009,7 +1009,7 @@ export default function ServerPage({ params }: { params: Promise<{ serverId: str
                           }}
                           className={`p-4 rounded-lg text-center transition-all ${
                             selectedTemplate === templateName
-                              ? 'bg-blue-600/20 text-blue-400 border border-blue-500/50 shadow-lg shadow-blue-500/20'
+                              ? 'bg-white/10 text-white border border-white/20 shadow-lg shadow-white/5'
                               : 'bg-black/20 text-white/70 hover:bg-black/30 hover:text-white border border-white/5'
                           } capitalize`}
                         >
@@ -1019,22 +1019,27 @@ export default function ServerPage({ params }: { params: Promise<{ serverId: str
                     </div>
 
                     {selectedTemplate && (
-                      <div className="mt-4 p-4 bg-gray-50 rounded-md">
-                        <div className="flex justify-between items-center mb-4">
-                          <h4 className="font-medium">Vista previa de las opciones a crear: {selectedTemplate}</h4>
+                      <div className="mt-6 p-6 bg-black/20 border border-white/10 rounded-xl">
+                        <div className="flex flex-wrap justify-between items-center mb-6">
+                          <h4 className="text-lg font-medium text-white">
+                            Vista previa de las opciones a crear: {selectedTemplate}
+                          </h4>
                           <button
                             onClick={() => {
                               setSelectedTemplate(null);
                               setPreviewData([]);
                             }}
-                            className="text-sm text-gray-500 hover:text-gray-700"
+                            className="px-4 py-2 text-white/70 hover:text-white transition-colors rounded-lg hover:bg-white/5"
                           >
                             Cancelar
                           </button>
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                           {previewData.map((item, index) => (
-                            <div key={index} className="p-2 bg-white rounded border border-gray-200">
+                            <div 
+                              key={index} 
+                              className="p-4 bg-black/30 rounded-lg border border-white/5 text-white/90"
+                            >
                               {item}
                             </div>
                           ))}
@@ -1042,11 +1047,11 @@ export default function ServerPage({ params }: { params: Promise<{ serverId: str
                         <button
                           onClick={handleApplyTemplate}
                           disabled={isAddingOption}
-                          className={`mt-4 w-full ${
+                          className={`mt-6 w-full px-6 py-3 rounded-lg transition-all ${
                             isAddingOption
-                              ? 'bg-gray-400 cursor-not-allowed'
-                              : 'bg-green-600 hover:bg-green-700'
-                          } text-white px-4 py-2 rounded-md transition-colors`}
+                              ? 'bg-gray-700/50 cursor-not-allowed'
+                              : 'bg-gradient-to-r from-gray-800 to-black hover:from-gray-900 hover:to-gray-800'
+                          } text-white shadow-lg shadow-black/20`}
                         >
                           {isAddingOption ? 'Creando opciones...' : 'Crear Opciones'}
                         </button>
@@ -1072,25 +1077,22 @@ export default function ServerPage({ params }: { params: Promise<{ serverId: str
                     <h3 className="text-xl font-semibold mb-4 text-white">
                       Agregar Nueva Opción al Menú {selectedMenu}
                     </h3>
-                    <div className="flex gap-3">
-                      <input
-                        type="text"
-                        value={newOptionName}
-                        onChange={(e) => setNewOptionName(e.target.value)}
-                        placeholder="Nombre de la opción"
-                        className="flex-1 px-4 py-3 bg-black/20 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white placeholder-white/50"
-                        disabled={isAddingOption}
-                      />
+                    <div className="flex flex-wrap gap-4 items-center justify-between mb-6 w-full">
+                      <div className="flex-grow min-w-[200px] max-w-full">
+                        <input
+                          type="text"
+                          value={newOptionName}
+                          onChange={(e) => setNewOptionName(e.target.value)}
+                          placeholder="Nombre de la nueva opción"
+                          className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/30 text-white placeholder-white/50"
+                        />
+                      </div>
                       <button
                         onClick={handleAddOption}
                         disabled={isAddingOption}
-                        className={`px-6 py-3 rounded-lg transition-all ${
-                          isAddingOption
-                            ? 'bg-blue-500/50 cursor-not-allowed'
-                            : 'bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900'
-                        } text-white shadow-lg shadow-blue-500/20`}
+                        className="flex-shrink-0 px-6 py-3 rounded-lg bg-gradient-to-r from-gray-800 to-black hover:from-gray-900 hover:to-gray-800 text-white shadow-lg shadow-black/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                       >
-                        {isAddingOption ? 'Agregando...' : 'Agregar'}
+                        {isAddingOption ? 'Agregando...' : 'Agregar nueva opción [N]'}
                       </button>
                     </div>
                   </div>
