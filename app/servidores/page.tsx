@@ -173,12 +173,12 @@ export default function ServidoresPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-blue-950 text-white p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Servidores de Discord</h1>
+        <h1 className="text-3xl font-bold mb-8 bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">Servidores de Discord</h1>
         
         {error && (
-          <div className="bg-red-500 text-white p-4 rounded-lg mb-6">
+          <div className="bg-red-500/20 border border-red-500/30 text-white p-4 rounded-lg mb-6">
             {error}
           </div>
         )}
@@ -187,43 +187,43 @@ export default function ServidoresPage() {
           {servidores.map((servidor) => (
             <div 
               key={servidor.inviteCode}
-              className="bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition-all"
+              className="bg-black/30 backdrop-blur-xl rounded-lg p-4 md:p-6 hover:bg-black/40 transition-all border border-white/10"
             >
-              <div className="flex items-center space-x-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                 {servidor.iconUrl ? (
                   <img 
                     src={servidor.iconUrl} 
                     alt={servidor.name} 
-                    className="w-16 h-16 rounded-full"
+                    className="w-16 h-16 rounded-full ring-2 ring-white/10"
                   />
                 ) : (
-                  <div className="w-16 h-16 bg-gray-600 rounded-full flex items-center justify-center">
-                    <span className="text-2xl font-bold">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-800 rounded-full flex items-center justify-center ring-2 ring-white/10">
+                    <span className="text-2xl font-bold text-white">
                       {servidor.name.charAt(0)}
                     </span>
                   </div>
                 )}
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3">
-                    <h2 className="text-xl font-semibold">{servidor.name}</h2>
-                    <span className={`px-3 py-1 rounded-full text-sm ${
-                      servidor.userIsMember ? 'bg-green-500' : 'bg-red-500'
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                    <h2 className="text-xl font-semibold text-white/90 truncate">{servidor.name}</h2>
+                    <span className={`inline-flex px-3 py-1 rounded-full text-sm w-fit ${
+                      servidor.userIsMember ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'
                     }`}>
                       {servidor.userIsMember ? 'Miembro' : 'No unido'}
                     </span>
                   </div>
                   {servidor.description && (
-                    <p className="text-gray-300 mt-2">{servidor.description}</p>
+                    <p className="text-white/70 mt-2 line-clamp-2">{servidor.description}</p>
                   )}
-                  <div className="flex items-center space-x-4 mt-3">
-                    <span className="text-gray-400">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-3">
+                    <span className="text-white/60 truncate">
                       {servidor.memberCount.toLocaleString()} miembros
                     </span>
                     <a
                       href={`https://discord.gg/${servidor.inviteCode}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-400 hover:text-blue-300"
+                      className="text-blue-400 hover:text-blue-300 truncate"
                     >
                       discord.gg/{servidor.inviteCode}
                     </a>
@@ -236,4 +236,4 @@ export default function ServidoresPage() {
       </div>
     </div>
   );
-} 
+}
