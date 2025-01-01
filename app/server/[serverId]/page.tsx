@@ -173,6 +173,10 @@ export default function ServerPage({ params }: { params: Promise<{ serverId: str
     fetchBotConfig();
   }, [serverId]);
 
+  useEffect(() => {
+    setMessage(null);
+  }, [activeTab]);
+
   const fetchOptions = async () => {
     try {
       const response = await fetch(`/api/options?serverId=${serverId}&menuNumber=${selectedMenu}`);
@@ -885,7 +889,10 @@ export default function ServerPage({ params }: { params: Promise<{ serverId: str
           <ul>
             <li className="mb-2">
               <button
-                onClick={() => setActiveTab('add')}
+                onClick={() => {
+                  setActiveTab('add');
+                  setMessage(null);
+                }}
                 className={`block w-full px-4 py-2 rounded-md text-left ${
                   activeTab === 'add'
                     ? 'bg-blue-50 text-blue-600'
@@ -897,7 +904,10 @@ export default function ServerPage({ params }: { params: Promise<{ serverId: str
             </li>
             <li className="mb-2">
               <button
-                onClick={() => setActiveTab('view')}
+                onClick={() => {
+                  setActiveTab('view');
+                  setMessage(null);
+                }}
                 className={`block w-full px-4 py-2 rounded-md text-left ${
                   activeTab === 'view'
                     ? 'bg-blue-50 text-blue-600'
@@ -909,7 +919,10 @@ export default function ServerPage({ params }: { params: Promise<{ serverId: str
             </li>
             <li className="mb-2">
               <button
-                onClick={() => setActiveTab('config')}
+                onClick={() => {
+                  setActiveTab('config');
+                  setMessage(null);
+                }}
                 className={`block w-full px-4 py-2 rounded-md text-left ${
                   activeTab === 'config'
                     ? 'bg-blue-50 text-blue-600'
@@ -1034,6 +1047,19 @@ export default function ServerPage({ params }: { params: Promise<{ serverId: str
                   )}
                 </div>
 
+                {/* Botón para eliminar todas las opciones */}
+                <button
+                  onClick={handleDeleteAllStock}
+                  disabled={isDeletingAllStock}
+                  className={`w-full ${
+                    isDeletingAllStock
+                      ? 'bg-red-400 cursor-not-allowed'
+                      : 'bg-red-600 hover:bg-red-700'
+                  } text-white px-4 py-2 rounded-md transition-colors mb-4`}
+                >
+                  {isDeletingAllStock ? 'Eliminando...' : 'Eliminar Opciones'}
+                </button>
+
                 {/* Sección para agregar nueva opción */}
                 <div className="p-4 border border-gray-200 rounded-md">
                   <h3 className="text-lg font-semibold mb-4">Agregar Nueva Opción al Menú {selectedMenu}</h3>
@@ -1067,18 +1093,32 @@ export default function ServerPage({ params }: { params: Promise<{ serverId: str
                   </label>
                   <div className="grid grid-cols-2 gap-2 mb-4 max-h-[300px] overflow-y-auto">
                     {options.map((option) => (
-                      <button
+                      <div
                         key={option.id}
-                        onClick={() => setSelectedOption(option)}
-                        className={`p-2 rounded-md text-left flex items-center space-x-2 ${
+                        className={`p-2 rounded-md text-left flex items-center justify-between ${
                           selectedOption?.id === option.id
                             ? 'bg-blue-50 text-blue-600 border-2 border-blue-500'
                             : 'bg-gray-50 hover:bg-gray-100'
                         } transition-colors`}
                       >
-                        <StockIcon />
-                        <span>{option.name}</span>
-                      </button>
+                        <button
+                          onClick={() => setSelectedOption(option)}
+                          className="flex items-center space-x-2 flex-grow"
+                        >
+                          <StockIcon />
+                          <span>{option.name}</span>
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteOption(option.id);
+                          }}
+                          className="p-1 text-red-500 hover:text-red-700 transition-colors"
+                          title="Eliminar opción"
+                        >
+                          <TrashIcon />
+                        </button>
+                      </div>
                     ))}
                   </div>
 
@@ -1108,18 +1148,6 @@ export default function ServerPage({ params }: { params: Promise<{ serverId: str
                   } text-white px-4 py-2 rounded-md transition-colors mb-4`}
                 >
                   {isLoading ? 'Subiendo...' : 'Subir'}
-                </button>
-
-                <button
-                  onClick={handleDeleteAllStock}
-                  disabled={isDeletingAllStock}
-                  className={`w-full ${
-                    isDeletingAllStock
-                      ? 'bg-red-400 cursor-not-allowed'
-                      : 'bg-red-600 hover:bg-red-700'
-                  } text-white px-4 py-2 rounded-md transition-colors`}
-                >
-                  {isDeletingAllStock ? 'Eliminando...' : 'Eliminar Opciones'}
                 </button>
               </div>
             ) : activeTab === 'view' ? (
