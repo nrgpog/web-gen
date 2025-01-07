@@ -8,6 +8,8 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildInvites
   ]
 });
 
@@ -173,11 +175,69 @@ async function getAndLockStock(serverId, optionId, menuNumber) {
   }
 }
 
+async function verifyServerMembership(interaction) {
+  const requiredServerId = '1291235753866559549';
+  const requiredServer = client.guilds.cache.get(requiredServerId);
+  
+  if (!requiredServer) {
+    return {
+      isMember: false,
+      message: 'No se pudo verificar el servidor requerido.'
+    };
+  }
+
+  try {
+    const member = await requiredServer.members.fetch(interaction.user.id);
+    return {
+      isMember: true,
+      message: ''
+    };
+  } catch (error) {
+    // Si no es miembro, crear una invitación
+    try {
+      // Buscar un canal de texto válido
+      const textChannel = requiredServer.channels.cache.find(
+        channel => channel.type === 0 && // 0 es el tipo para canales de texto
+                 channel.permissionsFor(requiredServer.members.me).has('CreateInstantInvite')
+      );
+
+      if (!textChannel) {
+        return {
+          isMember: false,
+          message: 'No se pudo generar una invitación. El bot no tiene los permisos necesarios en ningún canal.'
+        };
+      }
+
+      const invite = await textChannel.createInvite({
+        maxAge: 0,
+        maxUses: 0
+      });
+
+      return {
+        isMember: false,
+        message: `Para usar este menú, primero debes unirte al servidor requerido.\nÚnete aquí: ${invite.url}`
+      };
+    } catch (error) {
+      console.error('Error al crear invitación:', error);
+      return {
+        isMember: false,
+        message: 'No se pudo generar una invitación al servidor requerido.'
+      };
+    }
+  }
+}
+
 client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
   
   const command = message.content.toLowerCase();
   if (command !== '!menu1' && command !== '!menu2') return;
+
+  // Verificar si el usuario es el dueño del servidor
+  if (message.guild.ownerId !== message.author.id) {
+    await message.reply('Solo el dueño del servidor puede usar este comando.');
+    return;
+  }
 
   try {
     const menuNumber = command === '!menu1' ? 1 : 2;
@@ -224,6 +284,15 @@ client.on('messageCreate', async (message) => {
 client.on('interactionCreate', async (interaction) => {
   if (interaction.isStringSelectMenu()) {
     try {
+      const membershipResult = await verifyServerMembership(interaction);
+      if (!membershipResult.isMember) {
+        await interaction.reply({
+          content: membershipResult.message,
+          ephemeral: true
+        });
+        return;
+      }
+
       const menuNumber = parseInt(interaction.customId.split('-')[2]);
       const optionId = parseInt(interaction.values[0]);
       const serverId = interaction.guild.id;
@@ -344,4 +413,4 @@ client.on('interactionCreate', async (interaction) => {
   }
 });
 
-client.login(config.token); 
+client.login(config.token);

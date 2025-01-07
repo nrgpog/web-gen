@@ -1,17 +1,31 @@
-'use client';
-
 import './globals.css';
-import { SessionProvider } from 'next-auth/react';
+import { Inter } from 'next/font/google';
+import { Toaster } from 'react-hot-toast';
+import { getServerSession } from 'next-auth';
+import { authOptions } from './api/auth/options';
+import { SessionProvider } from './components/SessionProvider';
 
-export default function RootLayout({
+const inter = Inter({ subsets: ['latin'] });
+
+export const metadata = {
+  title: 'Apollo Bot',
+  description: 'Panel de control para el bot Apollo',
+};
+
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await getServerSession(authOptions);
+
   return (
     <html lang="es">
-      <body>
-        <SessionProvider>{children}</SessionProvider>
+      <body className={inter.className}>
+        <SessionProvider session={session}>
+          {children}
+          <Toaster />
+        </SessionProvider>
       </body>
     </html>
   );
