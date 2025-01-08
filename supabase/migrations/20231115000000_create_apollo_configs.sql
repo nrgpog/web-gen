@@ -22,5 +22,10 @@ create table apollo_configs (
     -- Datos de ejecución
     pending_data text,
     pending_category text,
-    execution_requested_at timestamp with time zone
+    execution_requested_at timestamp with time zone,
+    execution_started_at timestamp with time zone,
+    is_executing BOOLEAN DEFAULT FALSE
 ); 
+
+-- Actualizar registros existentes
+UPDATE apollo_configs SET is_executing = FALSE WHERE is_executing IS NULL; 

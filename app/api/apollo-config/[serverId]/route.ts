@@ -1,103 +1,74 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/options';
-
-const supabase = createClient(
-  process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_ANON_KEY || ''
-);
-
-type Params = { params: Promise<{ serverId: string }> };
 
 export async function GET(
   request: Request,
-  { params }: Params
+  context: { params: { serverId: string } }
 ) {
   try {
-    const resolvedParams = await params;
-    const session = await getServerSession(authOptions);
-    
+    // Verificar sesión
+    const session = await getServerSession();
     if (!session) {
-      return new NextResponse(JSON.stringify({ error: 'No autorizado' }), {
-        status: 401,
-      });
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const serverId = resolvedParams.serverId;
+    // Inicializar Supabase
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
+      return NextResponse.json(
+        { error: 'Error de configuración del servidor' },
+        { status: 500 }
+      );
+    }
+
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_ANON_KEY
+    );
+
+    // Extraer y validar serverId de manera asíncrona
+    const params = await context.params;
+    const serverId = params.serverId;
     if (!serverId) {
-      return new NextResponse(
-        JSON.stringify({ error: 'ID del servidor es requerido' }),
+      return NextResponse.json(
+        { error: 'ServerId no proporcionado' },
         { status: 400 }
       );
     }
 
-    const { data: existingConfig, error: fetchError } = await supabase
+    const { data: config, error } = await supabase
       .from('apollo_configs')
       .select('*')
       .eq('serverid', serverId)
       .single();
 
-    if (fetchError && fetchError.code !== 'PGRST116') {
-      console.error('Error al obtener la configuración:', fetchError);
-      return new NextResponse(
-        JSON.stringify({ error: 'Error al obtener la configuración' }),
+    if (error) {
+      return NextResponse.json(
+        { error: 'Error al obtener configuración' },
         { status: 500 }
       );
     }
 
-    if (!existingConfig) {
-      const { data: newConfig, error: insertError } = await supabase
+    // Si isrunning es true pero no hay datos pendientes, corregir el estado
+    if (config.isrunning && !config.pending_data && !config.is_executing) {
+      const { error: updateError } = await supabase
         .from('apollo_configs')
-        .insert([
-          {
-            serverid: serverId,
-            isrunning: false,
-            lastrun: null,
-            sorteo_duracion: '1h',
-            sorteo_ganadores: 1,
-            sorteo_datos_por_ganador: 1,
-            sorteo_tiempo_respuesta: '5m',
-            sorteo_tiempo_espera: '30m',
-            preguntas: [],
-            categoryid: null
-          },
-        ])
-        .select()
-        .single();
+        .update({
+          isrunning: false,
+          execution_requested_at: null
+        })
+        .eq('serverid', serverId);
 
-      if (insertError) {
-        console.error('Error al crear la configuración:', insertError);
-        return new NextResponse(
-          JSON.stringify({ error: 'Error al crear la configuración' }),
-          { status: 500 }
-        );
+      if (!updateError) {
+        config.isrunning = false;
+        config.execution_requested_at = null;
       }
-
-      return new NextResponse(JSON.stringify({
-        ...newConfig,
-        serverId: newConfig.serverid,
-        isRunning: newConfig.isrunning,
-        lastRun: newConfig.lastrun,
-        createdAt: newConfig.createdat,
-        updatedAt: newConfig.updatedat,
-        categoryId: newConfig.categoryid
-      }));
     }
 
-    return new NextResponse(JSON.stringify({
-      ...existingConfig,
-      serverId: existingConfig.serverid,
-      isRunning: existingConfig.isrunning,
-      lastRun: existingConfig.lastrun,
-      createdAt: existingConfig.createdat,
-      updatedAt: existingConfig.updatedat,
-      categoryId: existingConfig.categoryid
-    }));
+    return NextResponse.json(config);
   } catch (error) {
-    console.error('Error en el servidor:', error);
-    return new NextResponse(
-      JSON.stringify({ error: 'Error interno del servidor' }),
+    return NextResponse.json(
+      { error: 'Error interno del servidor' },
       { status: 500 }
     );
   }
@@ -105,71 +76,63 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: Params
+  context: { params: { serverId: string } }
 ) {
   try {
-    const resolvedParams = await params;
-    const session = await getServerSession(authOptions);
-    
+    console.log('📝 PUT /api/apollo-config/[serverId] - Iniciando actualización');
+
+    const session = await getServerSession();
     if (!session) {
-      return new NextResponse(JSON.stringify({ error: 'No autorizado' }), {
-        status: 401,
-      });
+      console.log('❌ No hay sesión activa');
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const serverId = resolvedParams.serverId;
+    // Extraer y validar serverId de manera asíncrona
+    const params = await context.params;
+    const serverId = params.serverId;
     if (!serverId) {
-      return new NextResponse(
-        JSON.stringify({ error: 'ID del servidor es requerido' }),
+      console.error('❌ ServerId no proporcionado');
+      return NextResponse.json(
+        { error: 'ServerId no proporcionado' },
         { status: 400 }
       );
     }
+    console.log('🆔 Actualizando configuración para servidor:', serverId);
 
     const body = await request.json();
-    const updateData = {
-      sorteo_duracion: body.sorteo_duracion,
-      sorteo_ganadores: body.sorteo_ganadores,
-      sorteo_datos_por_ganador: body.sorteo_datos_por_ganador,
-      sorteo_tiempo_respuesta: body.sorteo_tiempo_respuesta,
-      sorteo_tiempo_espera: body.sorteo_tiempo_espera,
-      emoji_celebracion: body.emoji_celebracion,
-      emoji_trofeo: body.emoji_trofeo,
-      emoji_reloj: body.emoji_reloj,
-      emoji_error: body.emoji_error,
-      emoji_info: body.emoji_info,
-      emoji_fin: body.emoji_fin,
-      preguntas: body.preguntas,
-      categoryid: body.categoryId
-    };
+    console.log('📦 Datos recibidos para actualizar:', {
+      isrunning: body.isrunning,
+      pending_data: body.pending_data ? 'Tiene datos' : 'No tiene datos',
+      pending_category: body.pending_category,
+      execution_requested_at: body.execution_requested_at
+    });
 
-    const { data: updatedConfig, error: updateError } = await supabase
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_ANON_KEY!
+    );
+
+    const { data, error } = await supabase
       .from('apollo_configs')
-      .update(updateData)
+      .update(body)
       .eq('serverid', serverId)
       .select()
       .single();
 
-    if (updateError) {
-      console.error('Error al actualizar la configuración:', updateError);
-      return new NextResponse(
-        JSON.stringify({ error: 'Error al actualizar la configuración' }),
+    if (error) {
+      console.error('❌ Error al actualizar configuración:', error);
+      return NextResponse.json(
+        { error: 'Error al actualizar configuración' },
         { status: 500 }
       );
     }
 
-    return new NextResponse(JSON.stringify({
-      ...updatedConfig,
-      serverId: updatedConfig.serverid,
-      isRunning: updatedConfig.isrunning,
-      lastRun: updatedConfig.lastrun,
-      createdAt: updatedConfig.createdat,
-      updatedAt: updatedConfig.updatedat,
-      categoryId: updatedConfig.categoryid
-    }));
+    console.log('✅ Configuración actualizada exitosamente');
+    return NextResponse.json(data);
   } catch (error) {
-    console.error('Error en el servidor:', error);
-    return new NextResponse(
-      JSON.stringify({ error: 'Error interno del servidor' }),
+    console.error('❌ Error en el endpoint:', error);
+    return NextResponse.json(
+      { error: 'Error interno del servidor' },
       { status: 500 }
     );
   }
