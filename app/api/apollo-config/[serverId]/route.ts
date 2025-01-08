@@ -1,10 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getServerSession } from 'next-auth';
 
 export async function GET(
-  request: Request,
-  context: { params: { serverId: string } }
+  request: NextRequest,
+  { params }: { params: { serverId: string } }
 ) {
   try {
     // Verificar sesión
@@ -27,7 +27,6 @@ export async function GET(
     );
 
     // Extraer y validar serverId de manera asíncrona
-    const params = await context.params;
     const serverId = params.serverId;
     if (!serverId) {
       return NextResponse.json(
@@ -75,8 +74,8 @@ export async function GET(
 }
 
 export async function PUT(
-  request: Request,
-  context: { params: { serverId: string } }
+  request: NextRequest,
+  { params }: { params: { serverId: string } }
 ) {
   try {
     console.log('📝 PUT /api/apollo-config/[serverId] - Iniciando actualización');
@@ -87,8 +86,7 @@ export async function PUT(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    // Extraer y validar serverId de manera asíncrona
-    const params = await context.params;
+    // Extraer y validar serverId
     const serverId = params.serverId;
     if (!serverId) {
       console.error('❌ ServerId no proporcionado');
