@@ -2,9 +2,13 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getServerSession } from 'next-auth';
 
+type Params = {
+  serverId: string;
+};
+
 export async function GET(
   request: Request,
-  context: { params: { serverId: string } }
+  context: { params: Params }
 ) {
   try {
     // Verificar sesión
@@ -26,7 +30,7 @@ export async function GET(
       process.env.SUPABASE_ANON_KEY
     );
 
-    // Extraer y validar serverId de manera asíncrona
+    // Extraer y validar serverId
     const serverId = context.params.serverId;
     if (!serverId) {
       return NextResponse.json(
@@ -75,7 +79,7 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  context: { params: { serverId: string } }
+  context: { params: Params }
 ) {
   try {
     console.log('📝 PUT /api/apollo-config/[serverId] - Iniciando actualización');
